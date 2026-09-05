@@ -1,0 +1,710 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>교과평가 누락 점검표</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700&family=Noto+Sans+KR:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --bg:#F5F6F2;
+  --surface:#FFFFFF;
+  --surface-alt:#EDF0EA;
+  --border:#D9DED4;
+  --ink:#1E2622;
+  --ink-muted:#5C6660;
+  --accent:#3B6E71;
+  --accent-ink:#FFFFFF;
+  --accent-soft:#E3EEEE;
+  --good:#2F7D5C;
+  --good-soft:#E4F2EA;
+  --warn:#B8791F;
+  --warn-soft:#FBF0DD;
+  --bad:#B23B2E;
+  --bad-soft:#FBE7E3;
+  --shadow: 0 1px 2px rgba(20,32,28,.06), 0 4px 14px rgba(20,32,28,.05);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#141F1C;
+    --surface:#1B2925;
+    --surface-alt:#213330;
+    --border:#334640;
+    --ink:#E9EFEA;
+    --ink-muted:#9CB0A7;
+    --accent:#74B8B2;
+    --accent-ink:#0C1917;
+    --accent-soft:#213C3A;
+    --good:#74CE9E;
+    --good-soft:#1E3427;
+    --warn:#E4B268;
+    --warn-soft:#3B2E17;
+    --bad:#E58476;
+    --bad-soft:#3B221D;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141F1C;
+  --surface:#1B2925;
+  --surface-alt:#213330;
+  --border:#334640;
+  --ink:#E9EFEA;
+  --ink-muted:#9CB0A7;
+  --accent:#74B8B2;
+  --accent-ink:#0C1917;
+  --accent-soft:#213C3A;
+  --good:#74CE9E;
+  --good-soft:#1E3427;
+  --warn:#E4B268;
+  --warn-soft:#3B2E17;
+  --bad:#E58476;
+  --bad-soft:#3B221D;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box;}
+html,body{ margin:0; }
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:"Noto Sans KR",-apple-system,sans-serif;
+  font-variant-numeric:tabular-nums;
+}
+h1,h2,h3,.brand{ font-family:"Noto Serif KR",serif; text-wrap:balance; }
+.wrap{ max-width:1080px; margin:0 auto; padding:28px 20px 80px; }
+
+header.top{
+  display:flex; align-items:center; justify-content:space-between; gap:16px;
+  flex-wrap:wrap; padding:22px 20px; border-bottom:1px solid var(--border);
+  background:var(--surface);
+}
+.brand-block{ display:flex; align-items:baseline; gap:10px; }
+.brand{ font-size:22px; font-weight:700; letter-spacing:-.01em; }
+.brand-sub{ font-size:12.5px; color:var(--ink-muted); }
+.badge{
+  display:inline-flex; align-items:center; gap:5px; padding:3px 10px;
+  border-radius:999px; font-size:12px; font-weight:600; letter-spacing:.02em;
+}
+.badge.accent{ background:var(--accent-soft); color:var(--accent); }
+
+nav.tabs{
+  display:flex; gap:4px; margin:24px 0 0; border-bottom:1px solid var(--border);
+}
+nav.tabs button{
+  font:inherit; font-weight:600; font-size:14.5px; color:var(--ink-muted);
+  background:none; border:none; border-bottom:2px solid transparent;
+  padding:10px 6px; margin-right:20px; cursor:pointer;
+}
+nav.tabs button.active{ color:var(--accent); border-bottom-color:var(--accent); }
+nav.tabs button:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible{
+  outline:2px solid var(--accent); outline-offset:2px;
+}
+
+.panel{ display:none; padding-top:22px; }
+.panel.active{ display:block; }
+
+.notice{
+  display:flex; gap:10px; align-items:flex-start;
+  background:var(--warn-soft); border:1px solid color-mix(in srgb, var(--warn) 35%, transparent);
+  color:var(--ink); border-radius:10px; padding:12px 14px; font-size:13.5px; line-height:1.55;
+  margin-bottom:20px;
+}
+.notice b{ color:var(--warn); }
+
+.card{
+  background:var(--surface); border:1px solid var(--border); border-radius:14px;
+  padding:18px 20px; box-shadow:var(--shadow);
+}
+.card + .card{ margin-top:14px; }
+.card h3{ font-size:15px; margin:0 0 4px; }
+.card .hint{ font-size:12.5px; color:var(--ink-muted); margin:0 0 14px; }
+
+.subject-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:14px; }
+.subject-card{
+  background:var(--surface); border:1px solid var(--border); border-radius:12px;
+  padding:14px 16px; display:flex; flex-direction:column; gap:8px;
+}
+.subject-card .head{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.subject-card .name{ font-weight:700; font-size:14.5px; }
+.subject-card .grades{ font-size:11.5px; color:var(--ink-muted); }
+.tag-row{ display:flex; flex-wrap:wrap; gap:6px; }
+.tag{
+  background:var(--surface-alt); border:1px solid var(--border); border-radius:8px;
+  padding:3px 9px 3px 10px; font-size:12.5px; display:flex; align-items:center; gap:6px;
+}
+.tag button{ border:none; background:none; color:var(--ink-muted); cursor:pointer; font-size:13px; line-height:1; padding:0; }
+.tag button:hover{ color:var(--bad); }
+.addtag{ display:flex; gap:6px; margin-top:2px; }
+.addtag input{ flex:1; min-width:0; }
+.verify-note{ font-size:12px; color:var(--warn); background:var(--warn-soft); border-radius:8px; padding:6px 9px; }
+
+label{ font-size:12.5px; font-weight:600; color:var(--ink-muted); display:block; margin-bottom:4px; }
+select, input[type=text], input[type=file]{
+  font:inherit; font-size:13.5px; color:var(--ink); background:var(--surface-alt);
+  border:1px solid var(--border); border-radius:8px; padding:8px 10px; width:100%;
+}
+.form-row{ display:grid; grid-template-columns:repeat(4,1fr) auto; gap:10px; align-items:end; }
+.form-row .field{ min-width:0; }
+
+button.btn{
+  font:inherit; font-weight:700; font-size:13.5px; border:none; border-radius:9px;
+  padding:9px 16px; cursor:pointer; white-space:nowrap;
+}
+button.btn.primary{ background:var(--accent); color:var(--accent-ink); }
+button.btn.primary:hover{ filter:brightness(1.05); }
+button.btn.ghost{ background:var(--surface-alt); color:var(--ink); border:1px solid var(--border); }
+button.btn.ghost:hover{ background:var(--accent-soft); }
+button.btn.small{ padding:6px 11px; font-size:12.5px; }
+button.btn:disabled{ opacity:.45; cursor:not-allowed; }
+
+.upload-row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.upload-row input[type=file]{ flex:1; min-width:220px; }
+
+table.plan{ width:100%; border-collapse:collapse; font-size:13.5px; }
+table.plan th, table.plan td{ text-align:left; padding:8px 10px; border-bottom:1px solid var(--border); }
+table.plan th{ font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-muted); font-weight:700; }
+table.plan tr.demo td:first-child{ position:relative; }
+.demo-flag{ font-size:10.5px; color:var(--warn); font-weight:700; margin-right:6px; }
+.scroll-x{ overflow-x:auto; }
+td.del button{ background:none; border:none; color:var(--ink-muted); cursor:pointer; font-size:13px; }
+td.del button:hover{ color:var(--bad); }
+
+.summary-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:18px; }
+.stat{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px 16px; box-shadow:var(--shadow); }
+.stat .num{ font-size:26px; font-weight:700; font-family:"Noto Serif KR",serif; }
+.stat .lbl{ font-size:12px; color:var(--ink-muted); margin-top:2px; }
+.stat.bad .num{ color:var(--bad); }
+.stat.good .num{ color:var(--good); }
+
+.grade-block{ margin-bottom:22px; }
+.grade-title{ font-size:16px; font-weight:700; margin:0 0 10px; display:flex; align-items:center; gap:8px; }
+.grade-title .count{ font-size:12px; font-weight:600; color:var(--ink-muted); }
+
+.subject-result{ margin-bottom:12px; }
+.subject-result .sname{ font-size:13.5px; font-weight:700; margin-bottom:6px; }
+.domain-row{ display:flex; flex-wrap:wrap; gap:8px; }
+.pill{
+  display:inline-flex; align-items:center; gap:6px; padding:6px 11px; border-radius:9px;
+  font-size:12.5px; font-weight:600; border:1px solid transparent;
+}
+.pill.good{ background:var(--good-soft); color:var(--good); border-color:color-mix(in srgb, var(--good) 30%, transparent); }
+.pill.bad{ background:var(--bad-soft); color:var(--bad); border-color:color-mix(in srgb, var(--bad) 30%, transparent); }
+.pill .dot{ width:6px; height:6px; border-radius:50%; background:currentColor; }
+.pill .sub{ font-weight:400; opacity:.8; }
+
+.missing-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px; }
+.missing-list li{ font-size:13.5px; display:flex; gap:8px; align-items:baseline; }
+.missing-list b{ color:var(--bad); }
+
+.warn-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px; }
+.warn-list li{ font-size:13px; color:var(--ink-muted); }
+.warn-list b{ color:var(--warn); }
+
+.empty{ text-align:center; padding:40px 20px; color:var(--ink-muted); font-size:14px; }
+.footer-note{ text-align:center; color:var(--ink-muted); font-size:12px; margin-top:30px; }
+
+@media (max-width:720px){
+  .form-row{ grid-template-columns:1fr 1fr; }
+  .form-row .field:last-of-type{ grid-column:span 2; }
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand-block">
+    <span class="brand">교과평가 누락 점검표</span>
+    <span class="brand-sub">2022 개정 교육과정 · 초등</span>
+  </div>
+  <span class="badge accent" id="schoolYearBadge">1·2학기 통합 점검</span>
+</header>
+
+<div class="wrap">
+  <div class="notice">
+    <span>⚠️</span>
+    <span><b>영역 데이터는 참고용 기본값</b>입니다. 2022 개정 교육과정 각론 및 학교 교육과정 편성표를 기준으로 「영역 데이터」 탭에서 반드시 확인하고 수정한 뒤 사용하세요. 특히 <b>통합교과·실과·음악</b>은 학교별 재구성 폭이 커서 확인이 꼭 필요합니다.</span>
+  </div>
+
+  <nav class="tabs">
+    <button data-tab="data" class="active">① 영역 데이터</button>
+    <button data-tab="input">② 평가계획 입력</button>
+    <button data-tab="result">③ 누락 점검 결과</button>
+  </nav>
+
+  <section class="panel active" id="panel-data">
+    <div class="card" style="margin-bottom:16px;">
+      <h3>과목 추가</h3>
+      <p class="hint">학교에서 별도로 운영하는 교과(예: 창의적 체험활동 세부영역 등)가 있다면 추가하세요.</p>
+      <div class="addtag">
+        <input type="text" id="newSubjectName" placeholder="과목명 (예: 실과)">
+        <input type="text" id="newSubjectGrades" placeholder="적용 학년, 예: 5,6" style="max-width:160px;">
+        <button class="btn primary small" id="addSubjectBtn">추가</button>
+      </div>
+    </div>
+    <div class="subject-grid" id="subjectGrid"></div>
+  </section>
+
+  <section class="panel" id="panel-input">
+    <div class="card">
+      <h3>평가 실시 항목 추가</h3>
+      <p class="hint">학년·교과·학기·평가영역을 선택해 한 건씩 추가합니다. 이미 실시(또는 실시 예정)한 평가를 모두 입력하세요.</p>
+      <div class="form-row">
+        <div class="field"><label>학년</label>
+          <select id="inGrade"></select>
+        </div>
+        <div class="field"><label>교과</label>
+          <select id="inSubject"></select>
+        </div>
+        <div class="field"><label>학기</label>
+          <select id="inSemester"><option value="1">1학기</option><option value="2">2학기</option></select>
+        </div>
+        <div class="field"><label>평가영역</label>
+          <select id="inDomain"></select>
+        </div>
+        <button class="btn primary" id="addEntryBtn">추가</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>엑셀/CSV로 불러오기</h3>
+      <p class="hint">열 이름에 <b>학년, 교과, 학기, 평가영역</b>(또는 grade, subject, semester, domain)이 포함된 표를 업로드하면 자동으로 인식합니다. 학기는 "1", "1학기", "2학기" 모두 인식됩니다.</p>
+      <div class="upload-row">
+        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
+        <button class="btn ghost small" id="clearDemoBtn">예시 데이터 지우기</button>
+        <span id="uploadMsg" style="font-size:12.5px; color:var(--ink-muted);"></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>입력된 평가계획 (<span id="entryCount">0</span>건)</h3>
+      <div class="scroll-x">
+        <table class="plan" id="planTable">
+          <thead><tr><th>학년</th><th>교과</th><th>학기</th><th>평가영역</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-result">
+    <div id="resultBody"></div>
+  </section>
+
+  <p class="footer-note">입력한 데이터는 이 브라우저에만 저장됩니다 (다른 기기·사용자와 공유되지 않음).</p>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var DEFAULT_CURRICULUM = {
+    "국어": { grades:[1,2,3,4,5,6], domains:["듣기·말하기","읽기","쓰기","문법","문학","매체"] },
+    "수학": { grades:[1,2,3,4,5,6], domains:["수와 연산","변화와 관계","도형과 측정","자료와 가능성"] },
+    "통합교과(바른·슬기·즐거운 생활)": {
+      grades:[1,2], verify:true,
+      note:"1·2학년 대주제(대영역)는 학교 교육과정 편성표 기준으로 반드시 확인·수정하세요.",
+      domainsByGrade:{ "1":["학교","사람들","우리나라","탐험"], "2":["자연","세계","마을","시간"] }
+    },
+    "안전한 생활": {
+      grades:[1,2], verify:true,
+      note:"통합교과 속 안전 교육 영역은 학교별 편성 방식이 달라 확인이 필요합니다.",
+      domains:["생활 안전","교통 안전","신변 안전","재난 안전"]
+    },
+    "사회": {
+      grades:[3,4,5,6], verify:true,
+      note:"세부 성취기준 분류(지리인식/자연환경과 인간생활 등)는 학교 계획에 맞춰 더 세분화할 수 있습니다.",
+      domains:["지리","일반사회","역사"]
+    },
+    "도덕": { grades:[3,4,5,6], domains:["자기 자신과의 관계","타인과의 관계","사회·공동체와의 관계","자연·초월과의 관계"] },
+    "과학": { grades:[3,4,5,6], domains:["운동과 에너지","물질","생명","지구와 우주"] },
+    "실과": {
+      grades:[5,6], verify:true,
+      note:"실과 영역명은 개정 각론 원문을 통해 반드시 재확인하세요.",
+      domains:["인간발달과 가족","가정생활과 안전","자원 관리와 자립","기술과 발달"]
+    },
+    "체육": { grades:[3,4,5,6], domains:["운동","스포츠","표현"] },
+    "음악": {
+      grades:[3,4,5,6], verify:true,
+      note:"음악과 영역 구성은 학교 교육과정 문서로 재확인하세요.",
+      domains:["표현","감상"]
+    },
+    "미술": { grades:[3,4,5,6], domains:["체험","표현","감상"] },
+    "영어": { grades:[3,4,5,6], domains:["듣기","말하기","읽기","쓰기"] }
+  };
+
+  var DEMO_ENTRIES = [
+    {grade:"3", subject:"국어", semester:"1", domain:"듣기·말하기", demo:true},
+    {grade:"3", subject:"국어", semester:"1", domain:"읽기", demo:true},
+    {grade:"3", subject:"수학", semester:"1", domain:"수와 연산", demo:true},
+    {grade:"3", subject:"과학", semester:"2", domain:"물질", demo:true}
+  ];
+
+  var LS_CURRICULUM = "acc_curriculum_v1";
+  var LS_ENTRIES = "acc_entries_v1";
+
+  function loadJSON(key, fallback){
+    try{ var v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
+    catch(e){ return fallback; }
+  }
+  function saveJSON(key, val){
+    try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){}
+  }
+
+  var curriculum = loadJSON(LS_CURRICULUM, null) || JSON.parse(JSON.stringify(DEFAULT_CURRICULUM));
+  var entries = loadJSON(LS_ENTRIES, null);
+  if(entries === null){ entries = DEMO_ENTRIES.slice(); }
+
+  function persist(){ saveJSON(LS_CURRICULUM, curriculum); saveJSON(LS_ENTRIES, entries); }
+
+  function domainsFor(subject, grade){
+    var s = curriculum[subject];
+    if(!s) return [];
+    if(s.domainsByGrade){ return s.domainsByGrade[String(grade)] || []; }
+    return s.domains || [];
+  }
+  function subjectsForGrade(grade){
+    var out = [];
+    Object.keys(curriculum).forEach(function(name){
+      var s = curriculum[name];
+      if(s.grades && s.grades.indexOf(Number(grade)) !== -1) out.push(name);
+    });
+    return out;
+  }
+
+  // ---------- tabs ----------
+  var tabs = document.querySelectorAll("nav.tabs button");
+  tabs.forEach(function(btn){
+    btn.addEventListener("click", function(){
+      tabs.forEach(function(b){ b.classList.remove("active"); });
+      document.querySelectorAll(".panel").forEach(function(p){ p.classList.remove("active"); });
+      btn.classList.add("active");
+      document.getElementById("panel-" + btn.dataset.tab).classList.add("active");
+      if(btn.dataset.tab === "result") renderResults();
+    });
+  });
+
+  // ---------- data tab ----------
+  function renderSubjectGrid(){
+    var grid = document.getElementById("subjectGrid");
+    grid.innerHTML = "";
+    Object.keys(curriculum).forEach(function(name){
+      var s = curriculum[name];
+      var card = document.createElement("div");
+      card.className = "subject-card";
+
+      var head = document.createElement("div");
+      head.className = "head";
+      var nameEl = document.createElement("span");
+      nameEl.className = "name";
+      nameEl.textContent = name;
+      var gradesEl = document.createElement("span");
+      gradesEl.className = "grades";
+      gradesEl.textContent = (s.grades||[]).map(function(g){return g+"학년";}).join(", ");
+      head.appendChild(nameEl); head.appendChild(gradesEl);
+      card.appendChild(head);
+
+      if(s.verify){
+        var note = document.createElement("div");
+        note.className = "verify-note";
+        note.textContent = "⚠ 확인 필요: " + (s.note || "");
+        card.appendChild(note);
+      }
+
+      if(s.domainsByGrade){
+        Object.keys(s.domainsByGrade).forEach(function(g){
+          var lbl = document.createElement("label");
+          lbl.style.marginTop = "4px";
+          lbl.textContent = g + "학년 영역";
+          card.appendChild(lbl);
+          card.appendChild(buildTagRow(name, s.domainsByGrade[g], g));
+        });
+      } else {
+        card.appendChild(buildTagRow(name, s.domains, null));
+      }
+
+      var addRow = document.createElement("div");
+      addRow.className = "addtag";
+      var input = document.createElement("input");
+      input.type = "text";
+      input.placeholder = "영역 추가";
+      var addBtn = document.createElement("button");
+      addBtn.className = "btn ghost small";
+      addBtn.textContent = "+";
+      addBtn.addEventListener("click", function(){
+        var v = input.value.trim();
+        if(!v) return;
+        if(s.domainsByGrade){
+          var gradeKeys = Object.keys(s.domainsByGrade);
+          gradeKeys.forEach(function(g){ s.domainsByGrade[g].push(v); });
+        } else {
+          s.domains.push(v);
+        }
+        input.value = "";
+        persist(); renderSubjectGrid(); refreshInputSelectors();
+      });
+      addRow.appendChild(input); addRow.appendChild(addBtn);
+      card.appendChild(addRow);
+
+      grid.appendChild(card);
+    });
+  }
+
+  function buildTagRow(subjectName, domainList, gradeKey){
+    var row = document.createElement("div");
+    row.className = "tag-row";
+    domainList.forEach(function(d, idx){
+      var tag = document.createElement("span");
+      tag.className = "tag";
+      var txt = document.createElement("span");
+      txt.textContent = d;
+      var rm = document.createElement("button");
+      rm.textContent = "✕";
+      rm.title = "삭제";
+      rm.addEventListener("click", function(){
+        domainList.splice(idx, 1);
+        persist(); renderSubjectGrid(); refreshInputSelectors();
+      });
+      tag.appendChild(txt); tag.appendChild(rm);
+      row.appendChild(tag);
+    });
+    return row;
+  }
+
+  document.getElementById("addSubjectBtn").addEventListener("click", function(){
+    var nameInput = document.getElementById("newSubjectName");
+    var gradesInput = document.getElementById("newSubjectGrades");
+    var name = nameInput.value.trim();
+    var gradesStr = gradesInput.value.trim();
+    if(!name || !gradesStr) return;
+    var grades = gradesStr.split(",").map(function(x){return parseInt(x.trim(),10);}).filter(function(x){return !isNaN(x);});
+    if(!grades.length) return;
+    curriculum[name] = { grades: grades, domains: [] };
+    nameInput.value = ""; gradesInput.value = "";
+    persist(); renderSubjectGrid(); refreshInputSelectors();
+  });
+
+  // ---------- input tab ----------
+  var gradeSel = document.getElementById("inGrade");
+  var subjectSel = document.getElementById("inSubject");
+  var semSel = document.getElementById("inSemester");
+  var domainSel = document.getElementById("inDomain");
+
+  function fillSelect(sel, options){
+    sel.innerHTML = "";
+    options.forEach(function(o){
+      var opt = document.createElement("option");
+      opt.value = o; opt.textContent = o;
+      sel.appendChild(opt);
+    });
+  }
+
+  function refreshInputSelectors(){
+    fillSelect(gradeSel, ["1","2","3","4","5","6"]);
+    updateSubjectOptions();
+  }
+  function updateSubjectOptions(){
+    var subs = subjectsForGrade(gradeSel.value);
+    fillSelect(subjectSel, subs.length ? subs : ["(해당 학년 교과 없음)"]);
+    updateDomainOptions();
+  }
+  function updateDomainOptions(){
+    var doms = domainsFor(subjectSel.value, gradeSel.value);
+    fillSelect(domainSel, doms.length ? doms : ["(영역 없음 - 데이터 탭에서 추가)"]);
+  }
+  gradeSel.addEventListener("change", updateSubjectOptions);
+  subjectSel.addEventListener("change", updateDomainOptions);
+
+  document.getElementById("addEntryBtn").addEventListener("click", function(){
+    var g = gradeSel.value, s = subjectSel.value, sem = semSel.value, d = domainSel.value;
+    if(!g || !s || s.indexOf("없음")!==-1 || d.indexOf("없음")!==-1) return;
+    entries.push({grade:g, subject:s, semester:sem, domain:d});
+    persist(); renderPlanTable();
+  });
+
+  document.getElementById("clearDemoBtn").addEventListener("click", function(){
+    entries = entries.filter(function(e){ return !e.demo; });
+    persist(); renderPlanTable();
+  });
+
+  function renderPlanTable(){
+    var tbody = document.querySelector("#planTable tbody");
+    tbody.innerHTML = "";
+    entries.forEach(function(e, idx){
+      var tr = document.createElement("tr");
+      if(e.demo) tr.className = "demo";
+      var tds = [
+        (e.demo ? '<span class="demo-flag">예시</span>' : '') + e.grade + "학년",
+        e.subject,
+        e.semester + "학기",
+        e.domain
+      ];
+      tds.forEach(function(html){
+        var td = document.createElement("td");
+        td.innerHTML = html;
+        tr.appendChild(td);
+      });
+      var delTd = document.createElement("td");
+      delTd.className = "del";
+      var delBtn = document.createElement("button");
+      delBtn.textContent = "삭제";
+      delBtn.addEventListener("click", function(){
+        entries.splice(idx,1); persist(); renderPlanTable();
+      });
+      delTd.appendChild(delBtn);
+      tr.appendChild(delTd);
+      tbody.appendChild(tr);
+    });
+    document.getElementById("entryCount").textContent = entries.length;
+  }
+
+  // ---------- excel/csv import ----------
+  var HEADER_MAP = {
+    grade:["학년","grade"],
+    subject:["교과","과목","subject"],
+    semester:["학기","semester"],
+    domain:["평가영역","영역","domain","area"]
+  };
+  function matchHeader(h){
+    var norm = String(h).trim().toLowerCase();
+    for(var key in HEADER_MAP){
+      if(HEADER_MAP[key].some(function(alias){ return norm.indexOf(alias.toLowerCase()) !== -1; })) return key;
+    }
+    return null;
+  }
+  function parseSemester(v){
+    var s = String(v).trim();
+    var m = s.match(/[12]/);
+    return m ? m[0] : "1";
+  }
+  function parseGrade(v){
+    var s = String(v).trim();
+    var m = s.match(/[1-6]/);
+    return m ? m[0] : "";
+  }
+
+  document.getElementById("fileInput").addEventListener("change", function(ev){
+    var file = ev.target.files[0];
+    var msg = document.getElementById("uploadMsg");
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e){
+      try{
+        var wb = XLSX.read(e.target.result, {type:"binary"});
+        var sheet = wb.Sheets[wb.SheetNames[0]];
+        var rows = XLSX.utils.sheet_to_json(sheet, {header:1});
+        if(!rows.length){ msg.textContent = "빈 파일입니다."; return; }
+        var headerRow = rows[0];
+        var colMap = {};
+        headerRow.forEach(function(h, i){
+          var key = matchHeader(h);
+          if(key) colMap[key] = i;
+        });
+        if(colMap.grade===undefined || colMap.subject===undefined || colMap.semester===undefined || colMap.domain===undefined){
+          msg.textContent = "학년/교과/학기/평가영역 열을 찾지 못했습니다. 열 이름을 확인해주세요.";
+          return;
+        }
+        var added = 0;
+        for(var r=1; r<rows.length; r++){
+          var row = rows[r];
+          if(!row || !row.length) continue;
+          var g = parseGrade(row[colMap.grade]);
+          var subj = row[colMap.subject] ? String(row[colMap.subject]).trim() : "";
+          var sem = parseSemester(row[colMap.semester]);
+          var dom = row[colMap.domain] ? String(row[colMap.domain]).trim() : "";
+          if(!g || !subj || !dom) continue;
+          entries.push({grade:g, subject:subj, semester:sem, domain:dom});
+          added++;
+        }
+        persist(); renderPlanTable();
+        msg.textContent = added + "건을 불러왔습니다.";
+      }catch(err){
+        msg.textContent = "파일을 읽는 중 오류가 발생했습니다: " + err.message;
+      }
+    };
+    reader.readAsBinaryString(file);
+  });
+
+  // ---------- results ----------
+  function renderResults(){
+    var body = document.getElementById("resultBody");
+    if(!entries.length){
+      body.innerHTML = '<div class="empty">평가계획을 입력하면 학년·교과별 누락 영역이 여기에 표시됩니다.</div>';
+      return;
+    }
+
+    var gradesUsed = Array.from(new Set(entries.map(function(e){return e.grade;}))).sort();
+    var totalDomains = 0, totalCovered = 0, totalMissing = 0;
+    var missingByGrade = {};
+    var unknownDomainWarnings = [];
+
+    gradesUsed.forEach(function(g){ missingByGrade[g] = []; });
+
+    var html = "";
+
+    gradesUsed.forEach(function(g){
+      var subs = subjectsForGrade(g);
+      var subjectHtml = "";
+      subs.forEach(function(subjName){
+        var doms = domainsFor(subjName, g);
+        if(!doms.length) return;
+        var subjEntries = entries.filter(function(e){ return e.grade===g && e.subject===subjName; });
+        var pillsHtml = "";
+        doms.forEach(function(d){
+          var sem1 = subjEntries.some(function(e){ return e.domain===d && e.semester==="1"; });
+          var sem2 = subjEntries.some(function(e){ return e.domain===d && e.semester==="2"; });
+          var covered = sem1 || sem2;
+          totalDomains++;
+          if(covered) totalCovered++; else { totalMissing++; missingByGrade[g].push(subjName+" · "+d); }
+          var subLabel = covered ? (sem1 && sem2 ? "1·2학기" : (sem1 ? "1학기" : "2학기")) : "미실시";
+          pillsHtml += '<span class="pill '+(covered?"good":"bad")+'"><span class="dot"></span>'+d+'<span class="sub">'+subLabel+'</span></span>';
+        });
+        subjEntries.forEach(function(e){
+          if(doms.indexOf(e.domain) === -1){
+            unknownDomainWarnings.push(g+"학년 "+subjName+" · \""+e.domain+"\" (등록된 영역과 불일치)");
+          }
+        });
+        subjectHtml += '<div class="subject-result"><div class="sname">'+subjName+'</div><div class="domain-row">'+pillsHtml+'</div></div>';
+      });
+      if(subjectHtml){
+        html += '<div class="grade-block"><h3 class="grade-title">'+g+'학년 <span class="count">('+missingByGrade[g].length+'개 영역 누락)</span></h3>'+subjectHtml+'</div>';
+      }
+    });
+
+    var summaryHtml =
+      '<div class="summary-grid">' +
+        '<div class="stat"><div class="num">'+totalDomains+'</div><div class="lbl">점검 대상 영역</div></div>' +
+        '<div class="stat good"><div class="num">'+totalCovered+'</div><div class="lbl">연간 실시 완료</div></div>' +
+        '<div class="stat bad"><div class="num">'+totalMissing+'</div><div class="lbl">누락 (연간 미실시)</div></div>' +
+      '</div>';
+
+    var missingListHtml = "";
+    var anyMissing = false;
+    Object.keys(missingByGrade).forEach(function(g){
+      if(missingByGrade[g].length){
+        anyMissing = true;
+        missingListHtml += '<li><b>'+g+'학년</b> — '+missingByGrade[g].join(", ")+'</li>';
+      }
+    });
+    var missingCard = anyMissing
+      ? '<div class="card"><h3>누락된 평가영역</h3><ul class="missing-list">'+missingListHtml+'</ul></div>'
+      : '<div class="card"><h3>누락된 평가영역</h3><p class="hint" style="color:var(--good); margin:0;">모든 대상 영역이 1·2학기 중 최소 한 번은 실시되었습니다.</p></div>';
+
+    var warnCard = unknownDomainWarnings.length
+      ? '<div class="card"><h3>확인이 필요한 항목</h3><ul class="warn-list">' +
+        unknownDomainWarnings.map(function(w){ return '<li><b>⚠</b> '+w+'</li>'; }).join("") +
+        '</ul></div>'
+      : "";
+
+    body.innerHTML = summaryHtml + missingCard + warnCard + html;
+  }
+
+  // ---------- init ----------
+  refreshInputSelectors();
+  renderSubjectGrid();
+  renderPlanTable();
+  renderResults();
+})();
+</script>
+</body>
+</html>
